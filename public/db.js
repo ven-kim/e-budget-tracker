@@ -49,8 +49,8 @@ function checkDatabase() {
       })
         .then(response => response.json())
         .then(() => {
-          transaction = db.transaction([pendingObjectStoreName], `readwrite`);
-          store = transaction.objectStore(pendingObjectStoreName);
+          transaction = db.transaction([pending], `readwrite`);
+          store = transaction.objectStore(pending);
 
           store.clear();
         });
@@ -60,8 +60,8 @@ function checkDatabase() {
 
 function saveRecord(record) {
   const db = request.result;
-  const transaction = db.transaction([pendingObjectStoreName], `readwrite`);
-  const store = transaction.objectStore(pendingObjectStoreName);
+  const transaction = db.transaction(['pending'], `readwrite`);
+  const store = transaction.objectStore('pending');
 
   store.add(record);
 }
