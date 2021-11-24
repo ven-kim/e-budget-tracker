@@ -1,26 +1,33 @@
-"use strict";
+let db;
 
-const pendingObjectStoreName = `pending`;
+const request = indexedDB.open("budget", 1);
 
-const request = indexedDB.open(`budget`, 2);
+request.onupgradeneeded = function (event) {
+    const db = event.target.result;
 
-request.onupgradeneeded = event => {
-  const db = request.result;
-  console.log(event);
-
-  if (!db.objectStoreNames.contains(pendingObjectStoreName)) {
-    db.createObjectStore(pendingObjectStoreName, { autoIncrement: true });
-  }
+    db.createObjectStore("pending", {autoIncrement: true});
 };
 
 request.onsuccess = event => {
   console.log(`Success! ${event.type}`);
+
+  db = event.target.result;
+
   if (navigator.onLine) {
     checkDatabase();
   }
 };
 
-request.onerror = event => console.error(event);
+request.onerror = event => {
+  console.log("Woops! " + event.target.errorCode);
+};
+
+function saveRecord(record) {
+  const transaction = db.transaction(["pending"], "readwrite");
+  const store = transaction.objectStore("pending");
+
+  store.add(record);
+}
 
 function checkDatabase() {
   const db = request.result;

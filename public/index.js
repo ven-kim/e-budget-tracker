@@ -1,5 +1,3 @@
-"use strict";
-
 let transactions = [];
 let myChart;
 
