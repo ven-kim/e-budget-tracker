@@ -32,8 +32,8 @@ function saveRecord(record) {
 function checkDatabase() {
   const db = request.result;
 
-  let transaction = db.transaction([pendingObjectStoreName], `readwrite`);
-  let store = transaction.objectStore(pendingObjectStoreName);
+  let transaction = db.transaction(['pending'], `readwrite`);
+  let store = transaction.objectStore('pending');
 
   const getAll = store.getAll();
 
