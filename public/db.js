@@ -1,59 +1,62 @@
-let db;
-const request = indexedDB.open('budget', 1);
+"use strict";
 
-request.onupgradeneeded = function(event) {
-  const db = event.target.result;
-  db.createObjectStore('pending', { autoIncrement: true });
+const pendingObjectStoreName = `pending`;
+
+const request = indexedDB.open(`budget`, 2);
+
+request.onupgradeneeded = event => {
+  const db = request.result;
+  console.log(event);
+
+  if (!db.objectStoreNames.contains(pendingObjectStoreName)) {
+    db.createObjectStore(pendingObjectStoreName, { autoIncrement: true });
+  }
 };
 
-request.onsuccess = function(event) {
-  db = event.target.result;
-
+request.onsuccess = event => {
+  console.log(`Success! ${event.type}`);
   if (navigator.onLine) {
     checkDatabase();
   }
 };
 
-request.onerror = function(event) {
-  console.log('Error! ' + event.target.errorCode);
-};
-
-function saveRecord(record) {
-  const transaction = db.transaction(['pending'], 'readwrite');
-  const store = transaction.objectStore('pending');
-
-  store.add(record);
-}
+request.onerror = event => console.error(event);
 
 function checkDatabase() {
-  const transaction = db.transaction(['pending'], 'readwrite');
-  const store = transaction.objectStore('pending');
+  const db = request.result;
+
+  let transaction = db.transaction([pendingObjectStoreName], `readwrite`);
+  let store = transaction.objectStore(pendingObjectStoreName);
+
   const getAll = store.getAll();
 
-  getAll.onsuccess = function() {
+  getAll.onsuccess = () => {
     if (getAll.result.length > 0) {
-      fetch('/api/transaction/bulk', {
-        method: 'POST',
+      fetch(`/api/transaction/bulk`, {
+        method: `POST`,
         body: JSON.stringify(getAll.result),
         headers: {
-          Accept: 'application/json, text/plain, */*',
-          'Content-Type': 'application/json'
+          Accept: `application/json, text/plain, */*`,
+          "Content-Type": `application/json`
         }
       })
         .then(response => response.json())
         .then(() => {
-          const transaction = db.transaction(['pending'], 'readwrite');
-          const store = transaction.objectStore('pending');
+          transaction = db.transaction([pendingObjectStoreName], `readwrite`);
+          store = transaction.objectStore(pendingObjectStoreName);
+
           store.clear();
         });
-    } 
+    }
   };
 }
 
-function deletePending() {
-  const transaction = db.transaction(["pending"], "readwrite");
-  const store = transaction.objectStore("pending");
-  store.clear();
+function saveRecord(record) {
+  const db = request.result;
+  const transaction = db.transaction([pendingObjectStoreName], `readwrite`);
+  const store = transaction.objectStore(pendingObjectStoreName);
+
+  store.add(record);
 }
 
-window.addEventListener('online', checkDatabase);
+window.addEventListener(`online`, checkDatabase);
